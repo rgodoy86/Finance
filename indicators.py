@@ -1,7 +1,6 @@
 class Indicators:
 
     def __init__(self):
-        print("Constructor successfully created")
         pass
 
     ## Simple Media Average
@@ -13,6 +12,3 @@ class Indicators:
     def EMA(self, df, period=9):
         df["EMA_" + str(period)] = df.loc[:,"Close"].ewm(span=period, adjust=False).mean()
         return df
-
-    def test(self):
-        print("Test class")

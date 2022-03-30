@@ -1,6 +1,8 @@
 import pandas as pd
-import indicators
-
+from indicators import Indicators
 
 def main():
-    ind = indicators()
+    ind = Indicators()
+
+if __name__ == "__main__":
+    main()

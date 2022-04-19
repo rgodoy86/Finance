@@ -65,6 +65,8 @@ class Indicators:
     return self._indicators_df
   
   ### Exponential Moving Average
+  # https://www.investopedia.com/terms/m/movingaverage.asp
+  #
   def EMA(self, period=9):
 
     header = "Output EMA"
@@ -74,6 +76,8 @@ class Indicators:
     return self._indicators_df
 
   ### Simple Moving Average
+  # https://www.investopedia.com/terms/m/movingaverage.asp
+  #
   def SMA(self, period=9):
 
     header = "Output SMA"

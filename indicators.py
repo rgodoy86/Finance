@@ -63,6 +63,32 @@ class Indicators:
 
     self._indicators_df.drop([up_header, down_header], axis=1, inplace=True)
     return self._indicators_df
+
+  ### Average True Range - ATR
+  # https://www.investopedia.com/terms/a/atr.asp
+  #
+  def ATR(self, period=14):
+
+    atr_title = "ATR"
+
+    high_low = self._indicators_df['High'] - self._indicators_df['Low']
+    high_cp = np.abs(self._indicators_df['High'] - self._indicators_df['Close'].shift())
+    low_cp = np.abs(self._indicators_df['Low'] - self._indicators_df['Close'].shift())
+    
+    df = pd.concat([high_low, high_cp, low_cp], axis=1)
+    true_range = np.max(df, axis=1)
+
+    self._indicators_df[atr_title] = true_range.rolling(period).mean()
+
+    #Create and plot the graph
+    plt.figure(figsize=(12.2,4.5)) #width = 12.2in, height = 4.5
+    plt.plot(self._indicators_df[atr_title],  label="ATR") # plt.plot( X-Axis , Y-Axis, line_width, alpha_for_blending,  label)
+
+    plt.title("Average True Range")
+    plt.legend()
+    plt.show()
+
+    return self._indicators_df
   
   ### Exponential Moving Average
   # https://www.investopedia.com/terms/m/movingaverage.asp

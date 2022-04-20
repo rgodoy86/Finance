@@ -90,6 +90,44 @@ class Indicators:
 
     return self._indicators_df
   
+  ### Chaiking Money Flow (CMF)
+  # https://corporatefinanceinstitute.com/resources/knowledge/trading-investing/chaikin-money-flow-cmf/
+  # Main: trend indicator
+  # Type: zero cross
+  # 
+  # Above zero - bullish behavior (Up Trend)
+  # Below zero - bearing behavior (Down Trend)
+  #
+
+  def chaiking_money_flow(self, period=20, plot=False, threshold=0):
+    full_title = "Chaiking Money Flow"
+    title = "CMF"
+    header = "Output CMF"
+
+    self._indicators_df["cmfm"] = (((self._indicators_df["Close"] - self._indicators_df["Low"]) - (self._indicators_df["High"] - self._indicators_df["Close"])) / 
+                                   (self._indicators_df["High"] - self._indicators_df["Low"]))
+    
+    self._indicators_df["cmfv"] = self._indicators_df["cmfm"] * self._indicators_df["Volume"]
+
+    self._indicators_df[title] = self._indicators_df['cmfv'].rolling(window=period).mean() / self._indicators_df['Volume'].rolling(window=period).mean() 
+    self._indicators_df.drop(["cmfm","cmfv"], inplace=True, axis=1)
+
+    # Indicator Output
+    self._indicators_df.loc[self._indicators_df[title] > 0, header] = True # Buy
+    self._indicators_df.loc[self._indicators_df[title] <= 0, header] = False # Sell
+
+    #Create and plot the graph
+    if (plot is True):
+      plt.figure(figsize=(12.2,4.5))
+      plt.plot( self._indicators_df[title], color="lightgreen", label=title)
+      plt.axhline(y=threshold, color='tomato', linestyle='--')
+
+      plt.title(full_title)
+      plt.legend(loc='upper left')
+      plt.show()
+
+    return self._indicators_df
+  
   ### Exponential Moving Average
   # https://www.investopedia.com/terms/m/movingaverage.asp
   #

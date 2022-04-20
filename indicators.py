@@ -98,7 +98,6 @@ class Indicators:
   # Above zero - bullish behavior (Up Trend)
   # Below zero - bearing behavior (Down Trend)
   #
-
   def chaiking_money_flow(self, period=20, plot=False, threshold=0):
     full_title = "Chaiking Money Flow"
     title = "CMF"
@@ -139,7 +138,7 @@ class Indicators:
 
     return self._indicators_df
 
-    ### Heikin Ashi 
+  ### Heikin Ashi 
   # https://www.investopedia.com/trading/heikin-ashi-better-candlestick/#:~:text=Heikin%2DAshi%2C%20also%20sometimes%20spelled,and%20trends%20easier%20to%20analyze.
   # https://tradewithpython.com/constructing-heikin-ashi-candlesticks-using-python
   #
@@ -188,7 +187,7 @@ class Indicators:
 
     return self._indicators_df
 
-   ### Money Flow Index
+  ### Money Flow Index
   def money_flow_index(self, period=14):
     mfi_title = "MFI"
 
@@ -288,6 +287,71 @@ class Indicators:
 
     return self._indicators_df
 
+    def relative_vigor_index(self, period=10, plot=True):
+    rvi_title = "RVI"
+    rvi_signal_title = "RVI_Signal"
+
+    self._indicators_df["a"] = self._indicators_df["Close"] - self._indicators_df["Open"]
+    self._indicators_df["b"] = 2 * (self._indicators_df["Close"].shift(2) - self._indicators_df["Open"].shift(2))
+    self._indicators_df["c"] = 2 * (self._indicators_df["Close"].shift(3) - self._indicators_df["Open"].shift(3))
+    self._indicators_df["d"] = self._indicators_df["Close"].shift(4) - self._indicators_df["Open"].shift(4)
+    self._indicators_df["numerator"] = self._indicators_df["a"] + self._indicators_df["b"] + self._indicators_df["c"] + self._indicators_df["d"]
+    
+    self._indicators_df["e"] = self._indicators_df["High"] - self._indicators_df["Low"]
+    self._indicators_df["f"] = 2 * (self._indicators_df["High"].shift(2) - self._indicators_df["Low"].shift(2))
+    self._indicators_df["g"] = 2 * (self._indicators_df["High"].shift(3) - self._indicators_df["Low"].shift(3))
+    self._indicators_df["h"] = self._indicators_df["High"].shift(4) - self._indicators_df["Low"].shift(4)
+    self._indicators_df["denominator"] = self._indicators_df["e"] + self._indicators_df["f"] + self._indicators_df["g"] + self._indicators_df["h"]
+    
+    self._indicators_df["numerator_sum"] = self._indicators_df["numerator"].rolling(4).sum()
+    self._indicators_df["denominator_sum"] = self._indicators_df["denominator"].rolling(4).sum()
+    
+    self._indicators_df[rvi_title] = self._indicators_df["numerator_sum"] / self._indicators_df["denominator_sum"].rolling(period).mean()
+    
+    self._indicators_df[rvi_signal_title] = (self._indicators_df[rvi_title] + 
+                                                             2*self._indicators_df[rvi_title].shift(1) + 
+                                                             2*self._indicators_df[rvi_title].shift(2) + 
+                                                             2*self._indicators_df[rvi_title].shift(3)) / 6
+    
+    self._indicators_df.drop(["a","b","c","d","e","f","g","h", "numerator","denominator","numerator_sum","denominator_sum",],axis=1, inplace=True)
+
+#    for i in range(len(prices)):
+#        if rvi[i-1] < signal_line[i-1] and rvi[i] > signal_line[i]:
+#            if signal != 1:
+#                buy_price.append(prices[i])
+#                sell_price.append(np.nan)
+#                signal = 1
+#                rvi_signal.append(signal)
+#            else:
+#                buy_price.append(np.nan)
+#                sell_price.append(np.nan)
+#                rvi_signal.append(0)
+#        elif rvi[i-1] > signal_line[i-1] and rvi[i] < signal_line[i]:
+#            if signal != -1:
+#                buy_price.append(np.nan)
+#                sell_price.append(prices[i])
+#                signal = -1
+#                rvi_signal.append(signal)
+#            else:
+#                buy_price.append(np.nan)
+#                sell_price.append(np.nan)
+#                rvi_signal.append(0)
+#        else:
+#            buy_price.append(np.nan)
+#            sell_price.append(np.nan)
+#            rvi_signal.append(0)
+
+    if (plot is True):
+      #Create and plot the graph
+      plt.figure(figsize=(12.2,4.5))
+      plt.plot( self._indicators_df[rvi_title], color="lightgreen", label="RVI")
+      plt.plot( self._indicators_df[rvi_signal_title], color="tomato", label="RVI Siginal")
+
+      plt.title("Relative Vigor Index")
+      plt.legend()
+      plt.show()
+
+    return self._indicators_df
   
   ### Simple Moving Average
   # https://www.investopedia.com/terms/m/movingaverage.asp

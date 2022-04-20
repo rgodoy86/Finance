@@ -254,6 +254,40 @@ class Indicators:
     plt.show()
 
     return self._indicators_df
+
+  
+  ### On Balance Volume
+  # https://www.investopedia.com/terms/r/relative_vigor_index.asp
+  # https://medium.com/codex/implementing-the-relative-vigor-index-and-backtesting-a-trading-strategy-with-python-d317afc0923a
+  # https://www.investopedia.com/terms/o/onbalancevolume.asp
+  #
+  # Main: trend indicator
+  # Type: oscillator
+  # 
+  # Above zero - bullish behavior (Up Trend)
+  # Below zero - bearing behavior (Down Trend)
+  #
+  def OBV(self, plot=False):
+    header = "Output OBV"
+
+    self._indicators_df.loc[self._indicators_df["Close"] > self._indicators_df["Close"].shift(1), "Vol"] = self._indicators_df["Volume"]
+    self._indicators_df.loc[self._indicators_df["Close"] < self._indicators_df["Close"].shift(1), "Vol"] = self._indicators_df["Volume"] * (-1)
+    self._indicators_df.loc[self._indicators_df["Close"] == self._indicators_df["Close"].shift(1), "Vol"] = 0
+
+    self._indicators_df[header] = self._indicators_df["Vol"].cumsum()
+    self._indicators_df.drop(["Vol"], axis=1, inplace=True)
+
+    #Create and plot the graph
+    if (plot is True):
+      plt.figure(figsize=(12.2,4.5))
+      plt.plot( self._indicators_df[header], color="lightblue", label="OBV")
+
+      plt.title(header)
+      plt.legend(loc='upper left')
+      plt.show()
+
+    return self._indicators_df
+
   
   ### Simple Moving Average
   # https://www.investopedia.com/terms/m/movingaverage.asp

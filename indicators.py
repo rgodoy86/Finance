@@ -139,6 +139,55 @@ class Indicators:
 
     return self._indicators_df
 
+    ### Heikin Ashi 
+  # https://www.investopedia.com/trading/heikin-ashi-better-candlestick/#:~:text=Heikin%2DAshi%2C%20also%20sometimes%20spelled,and%20trends%20easier%20to%20analyze.
+  # https://tradewithpython.com/constructing-heikin-ashi-candlesticks-using-python
+  #
+  #
+  def heikin_ashi(self, plot=False):
+    header = "Output HA"
+    title = "Heiking Ashi"
+
+    self._indicators_df["HA Close"] = self._indicators_df["Open"] + self._indicators_df["High"] + self._indicators_df["Low"] + self._indicators_df["Close"]
+    self._indicators_df["HA Close"] = round(self._indicators_df["HA Close"] / 4, 2)
+
+    self._indicators_df["HA Open"] = np.nan
+    col_idx = self._indicators_df.columns.get_loc("HA Open")
+
+    for i in range(len(self._indicators_df)):
+      if i == 0:
+        self._indicators_df.iat[0,col_idx] = round(((self._indicators_df["Open"].iloc[0] + self._indicators_df["Close"].iloc[0])/2),2)
+      else:
+        self._indicators_df.iat[i,col_idx] = round(((self._indicators_df["HA Open"].iloc[i-1] + self._indicators_df["HA Close"].iloc[i-1])/2),2)
+
+    self._indicators_df["HA High"] = round(self._indicators_df[["HA Close","HA Open", "High"]].max(axis=1),2)
+    self._indicators_df["HA Low"] = round(self._indicators_df[["HA Close","HA Open", "Low"]].min(axis=1),2)
+
+    # Indicator Output
+    self._indicators_df["tmp"] = self._indicators_df["HA Close"] > self._indicators_df["HA Open"]
+    self._indicators_df["tmp2"] = self._indicators_df["tmp"].shift(1)
+
+    self._indicators_df[header] = (self._indicators_df["tmp"] ^ self._indicators_df["tmp2"])
+    self._indicators_df[header] = self._indicators_df[header]  &  (self._indicators_df["tmp"] == False) # True => Exit Signal
+
+    self._indicators_df.drop(["tmp", "tmp2"], axis=1, inplace=True)
+
+    if (plot is True):
+      fig = go.Figure(data=[go.Candlestick(x=self._indicators_df.index,
+                                            open=self._indicators_df["HA Open"],
+                                            high=self._indicators_df["HA High"],
+                                            low=self._indicators_df["HA Low"],
+                                            close=self._indicators_df["HA Close"])
+                            ])
+     
+      fig.update_layout( 
+                title = title + ' Chart', 
+                xaxis_title = 'Date', 
+                yaxis_title = 'Price')
+      fig.show()
+
+    return self._indicators_df
+  
   ### Simple Moving Average
   # https://www.investopedia.com/terms/m/movingaverage.asp
   #

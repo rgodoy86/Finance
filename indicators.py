@@ -187,6 +187,73 @@ class Indicators:
       fig.show()
 
     return self._indicators_df
+
+   ### Money Flow Index
+  def money_flow_index(self, period=14):
+    mfi_title = "MFI"
+
+    #Calculate the typical price
+    typical_price = (self._indicators_df['Close'] + self._indicators_df['High'] + self._indicators_df['Low']) / 3
+    
+    #Calculate the money flow
+    money_flow = typical_price * self._indicators_df['Volume']
+
+    #Get all of the positive and negative money flows 
+    #where the current typical price is higher than the previous day's typical price, we will append that days money flow to a positive list
+    #and where the current typical price is lower than the previous day's typical price, we will append that days money flow to a negative list
+    #and set any other value to 0 to be used when summing
+
+    positive_flow =[] #Create a empty list called positive flow
+    negative_flow = [] #Create a empty list called negative flow
+    #Loop through the typical price 
+    for i in range(1, len(typical_price)):
+      if typical_price[i] > typical_price[i-1]: #if the present typical price is greater than yesterdays typical price
+        positive_flow.append(money_flow[i-1])# Then append money flow at position i-1 to the positive flow list
+        negative_flow.append(0) #Append 0 to the negative flow list
+      
+      elif typical_price[i] < typical_price[i-1]:#if the present typical price is less than yesterdays typical price
+        negative_flow.append(money_flow[i-1])# Then append money flow at position i-1 to negative flow list
+        positive_flow.append(0)#Append 0 to the positive flow list
+      
+      else: #Append 0 if the present typical price is equal to yesterdays typical price
+        positive_flow.append(0)
+        negative_flow.append(0)
+    
+    #Get all of the positive and negative money flows within the time period
+    positive_mf =[]
+    negative_mf = [] 
+
+    #Get all of the positive money flows within the time period
+    for i in range(period-1, len(positive_flow)):
+      positive_mf.append(sum(positive_flow[i+1-period : i+1]))
+    
+    #Get all of the negative money flows within the time period  
+    for i in range(period-1, len(negative_flow)):
+      negative_mf.append(sum(negative_flow[i+1-period : i+1]))
+
+    # Calculate MFI
+    mfi = 100 * (np.array(positive_mf) / (np.array(positive_mf)  + np.array(negative_mf) ))
+    
+    # Filling up the 14 blank values to match main dataframe length
+    tmp_array = np.empty((1,period,))
+    tmp_array[:] = np.nan
+
+    # Adding it into the main dataframe
+    self._indicators_df[mfi_title] = np.concatenate((tmp_array[0], mfi))
+
+    #Create and plot the graph
+    plt.figure(figsize=(12.2,4.5)) #width = 12.2in, height = 4.5
+    plt.plot( self._indicators_df[mfi_title],  label='Money Flow Index') # plt.plot( X-Axis , Y-Axis, line_width, alpha_for_blending,  label)
+    plt.axhline(10, linestyle='--', color = 'orange')                               # Over Sold line (Buy)
+    plt.axhline(20, linestyle='--',color = 'blue')                                  # Over Sold Line (Buy)
+    plt.axhline(80, linestyle='--', color = 'blue')                                 # Over Bought line (Sell)
+    plt.axhline(90, linestyle='--', color = 'orange')                               # Over Bought line (Sell)
+
+    plt.title('Money Flow Index')
+    plt.legend(["MFI", "10 - Oversold line (Buy)", "20 - Oversold line (Buy)", "80 - Overbought line (Sell)", "90 - Overbought line (Sell)"], loc='upper left')
+    plt.show()
+
+    return self._indicators_df
   
   ### Simple Moving Average
   # https://www.investopedia.com/terms/m/movingaverage.asp

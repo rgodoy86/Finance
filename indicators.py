@@ -187,6 +187,42 @@ class Indicators:
 
     return self._indicators_df
 
+    ### ICHIMOKU ###
+  # https://www.investopedia.com/terms/i/ichimoku-cloud.asp
+  def ichimoku_get(self, head=True, quantity=5):
+    return self._ichimoku_df
+    
+  def ichimoku_set(self, period_conversion=9, period_baseline=26, period_span=52, period_lag=26):
+      self._ichimoku_df = self._indicators_df
+      
+      ### Tenkan-sen (Fast/Conversion Line): (9-period high + 9-period low)/2))
+      self._ichimoku_df["Tenkan Avg"] = (self._indicators_df.loc[:,"High"].rolling(window=period_conversion).max() +
+                                        self._indicators_df.loc[:,"Low"].rolling(window=period_conversion).min()) / 2
+      
+      #self._period9_high = self._ichimoku_df["High"].rolling(window=period_conversion, min_periods=0).max()
+      #self._period9_low = self._ichimoku_df["Low"].rolling(window=period_conversion, min_periods=0).min()
+      #self._ichimoku_df["Tenkan Avg"] = (self._period9_high + self._period9_low) / 2
+
+
+      ### Kijun-sen (Slow/Base Line): (26-period high + 26-period low)/2))
+      self._ichimoku_df["Kijun Avg"] = (self._indicators_df.loc[:,"High"].rolling(window=period_baseline).max() +
+                                        self._indicators_df.loc[:,"Low"].rolling(window=period_baseline).min()) / 2
+
+
+      ### Senkou Span A (Leading Span A): (Conversion Line + Base Line)/2))      
+      #self._ichimoku_df["Senkou A"] = ((self._ichimoku_df["Kijun Avg"] + self._ichimoku_df["Tenkan Avg"]) / 2)
+      self._ichimoku_df["Senkou A"] = ((self._ichimoku_df["Kijun Avg"] + self._ichimoku_df["Tenkan Avg"]) / 2).shift(period_baseline)
+
+
+      ### Senkou Span B (Leading Span B): (52-period high + 52-period low)/2))
+      self._ichimoku_df["Senkou B"] = ((self._indicators_df.loc[:,"High"].rolling(window=period_span).max() +
+                                        self._indicators_df.loc[:,"Low"].rolling(window=period_span).min()) / 2).shift(period_baseline)
+
+
+      # Chikou Span / The most current closing price plotted 26 time periods behind (optional)
+      self._ichimoku_df["Chikou"] = self._ichimoku_df["Close"].shift(-period_lag) 
+      return self._ichimoku_df
+    
   ### Money Flow Index
   def money_flow_index(self, period=14):
     mfi_title = "MFI"
